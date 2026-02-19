@@ -3,16 +3,14 @@ import MealCard from '@/components/mealCard.vue'
 import { ref, onMounted } from 'vue'
 import { getTodayMealsFromStorage } from '@/utils/storage'
 import { setupDailyCleanup } from '@/utils/timer'
+import { formatMealInfo } from '@/utils/mealUtils'
 
-// 从本地存储读取的餐品数据
 const selectedMeals = ref([])
 
-// 加载本地存储的餐品数据
 const loadSelectedMeals = () => {
   selectedMeals.value = getTodayMealsFromStorage()
 }
 
-// 组件挂载时加载数据并设置定时清理
 onMounted(() => {
   loadSelectedMeals()
   setupDailyCleanup()
@@ -32,13 +30,12 @@ onMounted(() => {
           :key="meal.id"
           :title="meal.title"
           :image-url="meal.imageUrl"
-          :info="meal.info"
+          :info="formatMealInfo(meal)"
           :checked="true"
           :disabled="true"
         />
       </div>
 
-      <!-- 空状态 -->
       <div v-if="selectedMeals.length === 0" class="nutrient-intake__empty">
         <el-empty description="暂无营养摄入记录" />
       </div>

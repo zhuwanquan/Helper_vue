@@ -1,25 +1,36 @@
 <script setup>
 import MealCard from '@/components/mealCard.vue'
-import { onMounted, computed } from 'vue'
+import MealForm from '@/components/MealForm.vue'
+import { ref, onMounted } from 'vue'
 import { useMealStore } from '@/stores/mealStore'
+import { formatMealInfo } from '@/utils/mealUtils'
 
 const mealStore = useMealStore()
-
-const formatMealInfo = (meal) => {
-  return {
-    energy: `${meal.energy || 0} kcal`,
-    protein: `${meal.protein || 0} g`,
-    transFat: `${meal.trans_fat || 0} g`,
-    saturatedFat: `${meal.saturated_fat || 0} g`,
-    carbohydrate: `${meal.carbohydrate || 0} g`,
-    addedSugar: `${meal.added_sugar || 0} g`,
-    salt: `${meal.salt || 0} g`,
-    dietaryFiber: `${meal.dietary_fiber || 0} g`,
-  }
-}
+const dialogVisible = ref(false)
+const mealFormRef = ref(null)
 
 const handleCheck = (meal, isChecked) => {
   mealStore.toggleMealChecked(meal.id, isChecked)
+}
+
+const handleOpenDialog = () => {
+  dialogVisible.value = true
+}
+
+const handleCloseDialog = () => {
+  dialogVisible.value = false
+  mealFormRef.value?.resetForm()
+}
+
+const handleSubmitForm = async (mealData) => {
+  try {
+    await mealStore.addMeal(mealData)
+    dialogVisible.value = false
+    mealFormRef.value?.resetForm()
+    await mealStore.fetchMeals()
+  } catch (error) {
+    console.error('添加餐品失败:', error)
+  }
 }
 
 onMounted(() => {
@@ -31,7 +42,7 @@ onMounted(() => {
   <div class="meal-records">
     <div class="meal-records__header">
       <h2 class="meal-records__title">餐品记录</h2>
-      <el-button type="primary">添加餐品</el-button>
+      <el-button type="primary" @click="handleOpenDialog">添加餐品</el-button>
     </div>
 
     <div class="meal-records__content">
@@ -47,11 +58,14 @@ onMounted(() => {
         />
       </div>
 
-      <!-- 空状态 -->
       <div v-if="mealStore.allMeals.length === 0" class="meal-records__empty">
         <el-empty description="暂无餐品记录" />
       </div>
     </div>
+
+    <el-dialog v-model="dialogVisible" title="添加餐品" width="600px" @close="handleCloseDialog">
+      <MealForm ref="mealFormRef" @submit="handleSubmitForm" @cancel="handleCloseDialog" />
+    </el-dialog>
   </div>
 </template>
 
