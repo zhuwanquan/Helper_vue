@@ -8,6 +8,12 @@ import {
   assessNutritionStatus,
   getStatusColor,
 } from '@/utils/nutritionStandards'
+import {
+  calculateTotalNutrition,
+  toChineseKey,
+  toEnglishKey,
+  formatNutritionValue,
+} from '@/utils/mealUtils'
 
 const selectedMeals = ref([])
 const totalNutrition = ref({})
@@ -15,49 +21,15 @@ const nutritionAssessment = ref({})
 const radarChart = ref(null)
 const barChart = ref(null)
 
-const getUnit = (key) => {
-  const units = {
-    能量: '卡',
-    蛋白质: 'g',
-    反式脂肪酸: 'g',
-    饱和脂肪: 'g',
-    碳水: 'g',
-    添加糖: 'g',
-    食盐: 'g',
-    膳食纤维: 'g',
-  }
-  return units[key] || ''
-}
-
-const calculateTotalNutrition = () => {
+const calculateTotalNutritionData = () => {
   const meals = getTodayMealsFromStorage()
   selectedMeals.value = meals
 
-  const total = {
-    能量: 0,
-    蛋白质: 0,
-    反式脂肪酸: 0,
-    饱和脂肪: 0,
-    碳水: 0,
-    添加糖: 0,
-    食盐: 0,
-    膳食纤维: 0,
-  }
-
-  meals.forEach((meal) => {
-    Object.keys(total).forEach((key) => {
-      if (meal.info[key]) {
-        const value = parseFloat(meal.info[key].replace(/[^\d.]/g, ''))
-        if (!isNaN(value)) {
-          total[key] += value
-        }
-      }
-    })
-  })
+  const total = calculateTotalNutrition(meals)
 
   Object.keys(total).forEach((key) => {
-    const unit = getUnit(key)
-    totalNutrition.value[key] = `${total[key].toFixed(1)}${unit}`
+    const chineseKey = toChineseKey(key)
+    totalNutrition.value[chineseKey] = formatNutritionValue(total[key], key)
   })
 
   assessNutrition()
@@ -66,13 +38,14 @@ const calculateTotalNutrition = () => {
 const assessNutrition = () => {
   const assessment = {}
   Object.keys(nutritionStandards).forEach((key) => {
-    const intake = totalNutrition.value[key] || '0'
+    const chineseKey = toChineseKey(key)
+    const intake = totalNutrition.value[chineseKey] || '0'
     const standard = nutritionStandards[key]
     const percentage = calculateNutritionPercentage(intake, standard)
     const status = assessNutritionStatus(percentage)
     const color = getStatusColor(status)
 
-    assessment[key] = {
+    assessment[chineseKey] = {
       intake,
       standard,
       percentage: (percentage * 100).toFixed(1),
@@ -89,12 +62,13 @@ const initRadarChart = () => {
   const myChart = echarts.init(radarChart.value)
 
   const indicators = Object.keys(nutritionStandards).map((key) => ({
-    name: key,
+    name: toChineseKey(key),
     max: 100,
   }))
 
   const seriesData = Object.keys(nutritionStandards).map((key) => {
-    const assessment = nutritionAssessment.value[key]
+    const chineseKey = toChineseKey(key)
+    const assessment = nutritionAssessment.value[chineseKey]
     return parseFloat(assessment.percentage)
   })
 
@@ -164,15 +138,16 @@ const initBarChart = () => {
 
   const myChart = echarts.init(barChart.value)
 
-  const categories = Object.keys(nutritionStandards)
-  const intakeData = categories.map((key) => {
-    return parseFloat(totalNutrition.value[key]?.replace(/[^\d.]/g, '') || 0)
+  const categories = Object.keys(nutritionStandards).map((key) => toChineseKey(key))
+  const intakeData = categories.map((chineseKey) => {
+    return parseFloat(totalNutrition.value[chineseKey]?.replace(/[^\d.]/g, '') || 0)
   })
-  const standardData = categories.map((key) => {
-    return parseFloat(nutritionStandards[key].replace(/[^\d.]/g, ''))
+  const standardData = categories.map((chineseKey) => {
+    const englishKey = toEnglishKey(chineseKey)
+    return parseFloat(nutritionStandards[englishKey].replace(/[^\d.]/g, ''))
   })
-  const statusColors = categories.map((key) => {
-    return nutritionAssessment.value[key].color
+  const statusColors = categories.map((chineseKey) => {
+    return nutritionAssessment.value[chineseKey].color
   })
 
   const option = {
@@ -270,7 +245,7 @@ watch(
 )
 
 onMounted(() => {
-  calculateTotalNutrition()
+  calculateTotalNutritionData()
   nextTick(() => {
     initRadarChart()
     initBarChart()
@@ -296,7 +271,7 @@ onMounted(() => {
             >
               <div class="nutrition-visualization__status-label">{{ key }}</div>
               <div class="nutrition-visualization__status-value">
-                {{ totalNutrition[key] || '0' }} / {{ nutritionStandards[key] }}
+                {{ totalNutrition[key] || '0' }} / {{ nutritionStandards[toEnglishKey(key)] }}
               </div>
               <div
                 class="nutrition-visualization__status-badge"

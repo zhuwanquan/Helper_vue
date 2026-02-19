@@ -40,7 +40,7 @@ const router = createRouter({
           name: 'nutritionVisualization',
           component: () => import('@/views/Nutrition/nutritionVisualization.vue'),
           meta: {
-            title: '营养可视化记录',
+            title: '营养视图',
           },
         },
         {

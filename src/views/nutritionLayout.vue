@@ -20,7 +20,7 @@ const menuItems = [
   },
   {
     path: '/nutritionVisualization',
-    title: '营养可视化记录',
+    title: '营养视图',
     icon: 'Document',
   },
   {

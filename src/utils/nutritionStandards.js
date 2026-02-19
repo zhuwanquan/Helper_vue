@@ -4,14 +4,14 @@
  */
 
 export const nutritionStandards = {
-  能量: '2200卡',
-  蛋白质: '70g',
-  反式脂肪酸: '2g',
-  饱和脂肪: '22g',
-  碳水: '300g',
-  添加糖: '50g',
-  食盐: '5g',
-  膳食纤维: '25g',
+  energy: '2200kcal',
+  protein: '70g',
+  trans_fat: '2g',
+  saturated_fat: '22g',
+  carbohydrate: '300g',
+  added_sugar: '50g',
+  salt: '5g',
+  dietary_fiber: '25g',
 }
 
 export const nutritionStatus = {
