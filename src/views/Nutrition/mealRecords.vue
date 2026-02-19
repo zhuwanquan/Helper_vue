@@ -1,17 +1,27 @@
 <script setup>
 import MealCard from '@/components/mealCard.vue'
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useMealStore } from '@/stores/mealStore'
 
-// 使用mealStore管理数据
 const mealStore = useMealStore()
 
-// 处理复选框点击事件
+const formatMealInfo = (meal) => {
+  return {
+    energy: `${meal.energy || 0} kcal`,
+    protein: `${meal.protein || 0} g`,
+    transFat: `${meal.trans_fat || 0} g`,
+    saturatedFat: `${meal.saturated_fat || 0} g`,
+    carbohydrate: `${meal.carbohydrate || 0} g`,
+    addedSugar: `${meal.added_sugar || 0} g`,
+    salt: `${meal.salt || 0} g`,
+    dietaryFiber: `${meal.dietary_fiber || 0} g`,
+  }
+}
+
 const handleCheck = (meal, isChecked) => {
   mealStore.toggleMealChecked(meal.id, isChecked)
 }
 
-// 组件挂载时初始化store
 onMounted(() => {
   mealStore.initialize()
 })
@@ -31,7 +41,7 @@ onMounted(() => {
           :key="meal.id"
           :title="meal.title"
           :image-url="meal.imageUrl"
-          :info="meal.info"
+          :info="formatMealInfo(meal)"
           v-model:checked="meal.checked"
           @check="(isChecked) => handleCheck(meal, isChecked)"
         />
