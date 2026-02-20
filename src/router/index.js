@@ -45,24 +45,6 @@ const router = createRouter({
         },
       ],
     },
-    {
-      path: '/consumption',
-      name: 'consumption',
-      component: () => import('@/views/consumptionLayout.vue'),
-      meta: {
-        title: '消费',
-      },
-      children: [
-        {
-          path: '/consumptionHistory',
-          name: 'consumptionHistory',
-          component: () => import('@/views/Consumption/consumptionHistory.vue'),
-          meta: {
-            title: '消费记录',
-          },
-        },
-      ],
-    },
   ],
 })
 

@@ -13,14 +13,6 @@ const features = ref([
     path: '/nutrition',
     onClick: () => navigateTo('/nutrition'),
   },
-  {
-    title: '消费记录',
-    description: '便捷的消费记录与统计分析，让您的每一笔支出都清晰可见',
-    icon: 'Wallet',
-    color: '#409eff',
-    path: '/consumption',
-    onClick: () => navigateTo('/consumption'),
-  },
 ])
 
 const techStack = ref([
@@ -40,17 +32,15 @@ const navigateTo = (path) => {
   <div class="introduction-page">
     <div class="hero-section">
       <div class="hero-content">
-        <h1 class="hero-title">HelperFirst</h1>
-        <p class="hero-subtitle">您的营养与消费管理助手</p>
+        <h1 class="hero-title">营养助手</h1>
+        <p class="hero-subtitle">您的营养管理助手</p>
         <p class="hero-description">
-          HelperFirst
-          是一款专注于健康饮食与消费管理的智能应用，帮助您轻松追踪营养摄入、管理消费记录，通过数据可视化让健康生活触手可及
+          营养助手是一款专注于健康饮食管理的智能应用，帮助您轻松追踪营养摄入，通过数据可视化让健康生活触手可及
         </p>
         <div class="hero-buttons">
           <el-button type="primary" size="large" @click="navigateTo('/nutrition')">
             开始使用
           </el-button>
-          <el-button size="large" @click="navigateTo('/consumption')"> 查看功能 </el-button>
         </div>
       </div>
     </div>
@@ -105,15 +95,15 @@ const navigateTo = (path) => {
         <div class="step-item">
           <div class="step-number">3</div>
           <div class="step-content">
-            <h4>管理消费记录</h4>
-            <p>记录每一笔消费支出，生成统计报表，合理规划财务</p>
+            <h4>优化饮食方案</h4>
+            <p>根据营养分析结果，制定更健康的饮食计划，保持营养均衡</p>
           </div>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <p>&copy; 2025 HelperFirst. 让健康管理更简单</p>
+      <p>&copy; 2025 营养助手. 让健康管理更简单</p>
     </div>
   </div>
 </template>

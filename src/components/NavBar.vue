@@ -9,7 +9,6 @@ const router = useRouter()
 const activeMenu = computed(() => {
   if (route.path === '/') return '/'
   if (route.path.startsWith('/nutrition')) return 'nutrition'
-  if (route.path.startsWith('/consumption')) return 'consumption'
   return route.path
 })
 
@@ -41,25 +40,11 @@ const menuItems = [
       },
     ],
   },
-  {
-    index: 'consumption',
-    title: '消费管理',
-    icon: Document,
-    children: [
-      {
-        index: '/consumptionHistory',
-        title: '消费记录',
-        icon: Document,
-      },
-    ],
-  },
 ]
 
 const handleMenuSelect = (index) => {
   if (index === 'nutrition') {
     router.push('/mealRecords')
-  } else if (index === 'consumption') {
-    router.push('/consumptionHistory')
   }
 }
 </script>
