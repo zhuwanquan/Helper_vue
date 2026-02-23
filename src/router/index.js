@@ -43,6 +43,14 @@ const router = createRouter({
             title: '营养视图',
           },
         },
+        {
+          path: '/nutritionAnalysis',
+          name: 'nutritionAnalysis',
+          component: () => import('@/views/Nutrition/nutritionAnalysis.vue'),
+          meta: {
+            title: '营养分析',
+          },
+        },
       ],
     },
   ],

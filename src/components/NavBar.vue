@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { House, Food, Document, Histogram } from '@element-plus/icons-vue'
+import { House, Food, Document, Histogram, ChatDotRound } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,6 +37,11 @@ const menuItems = [
         index: '/nutritionVisualization',
         title: '营养视图',
         icon: Histogram,
+      },
+      {
+        index: '/nutritionAnalysis',
+        title: '营养分析',
+        icon: ChatDotRound,
       },
     ],
   },
