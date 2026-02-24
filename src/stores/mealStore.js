@@ -5,47 +5,67 @@ import { saveMealToStorage, removeMealFromStorage, getTodayMealsFromStorage } fr
 import { setupDailyCleanup } from '@/utils/timer'
 import { mealApi } from '@/api/mealApi'
 
+/**
+ * 餐品状态管理
+ */
 export const useMealStore = defineStore('meal', () => {
+  /**
+   * 餐品列表
+   */
   const meals = ref([])
 
+  /**
+   * 所有餐品
+   */
   const allMeals = computed(() => meals.value)
 
+  /**
+   * 已选择的餐品
+   */
   const selectedMeals = computed(() => meals.value.filter((meal) => meal.checked))
 
+  /**
+   * 提取餐品列表数据
+   * @param {Object} data - 响应数据
+   * @returns {Array} 餐品列表
+   */
+  const extractMealList = (data) => {
+    if (Array.isArray(data?.content)) {
+      return data.content
+    } else if (Array.isArray(data?.records)) {
+      return data.records
+    } else if (Array.isArray(data?.list)) {
+      return data.list
+    } else if (Array.isArray(data?.items)) {
+      return data.items
+    } else if (Array.isArray(data)) {
+      return data
+    }
+    return []
+  }
+
+  /**
+   * 标准化餐品数据
+   * @param {Array} mealList - 原始餐品列表
+   * @returns {Array} 标准化后的餐品列表
+   */
+  const normalizeMeals = (mealList) => {
+    return mealList.map((meal) => ({
+      ...meal,
+      id: meal.meal_id || meal.id,
+      imageUrl: meal.image_url || meal.imageUrl,
+      checked: false,
+    }))
+  }
+
+  /**
+   * 获取餐品列表
+   */
   const fetchMeals = async () => {
     try {
       const response = await mealApi.getAllMeals()
-      console.log('=== 后端数据调试 ===')
-      console.log('1. 完整响应:', response)
-      console.log('2. 响应类型:', typeof response)
-      console.log('3. 是否为数组:', Array.isArray(response))
-      console.log('4. 所有字段:', Object.keys(response))
-      console.log('5. data字段:', response.data)
-      console.log('6. data类型:', typeof response.data)
-      console.log('7. data是否为数组:', Array.isArray(response.data))
-
-      const mealList = Array.isArray(response.data?.content)
-        ? response.data.content
-        : Array.isArray(response.data?.records)
-          ? response.data.records
-          : Array.isArray(response.data?.list)
-            ? response.data.list
-            : Array.isArray(response.data?.items)
-              ? response.data.items
-              : Array.isArray(response.data)
-                ? response.data
-                : []
-
-      console.log('8. 提取到的餐品列表:', mealList)
-      console.log('9. 餐品列表长度:', mealList.length)
-      console.log('==================')
-
-      meals.value = mealList.map((meal) => ({
-        ...meal,
-        id: meal.meal_id || meal.id,
-        imageUrl: meal.image_url || meal.imageUrl,
-        checked: false,
-      }))
+      const mealList = extractMealList(response.data)
+      meals.value = normalizeMeals(mealList)
     } catch (error) {
       console.error('获取餐食数据失败:', error)
       ElMessage.error(error.message || '获取餐食数据失败')
@@ -53,13 +73,14 @@ export const useMealStore = defineStore('meal', () => {
     }
   }
 
+  /**
+   * 初始化餐品数据
+   */
   const initialize = async () => {
     setupDailyCleanup()
     await fetchMeals()
 
     const todayMeals = getTodayMealsFromStorage()
-    console.log('从本地存储恢复的选中餐品:', todayMeals)
-
     meals.value.forEach((meal) => {
       const storedMeal = todayMeals.find((item) => item.id === meal.id)
       if (storedMeal) {
@@ -68,6 +89,11 @@ export const useMealStore = defineStore('meal', () => {
     })
   }
 
+  /**
+   * 切换餐品选择状态
+   * @param {string|number} mealId - 餐品 ID
+   * @param {boolean} isChecked - 是否选中
+   */
   const toggleMealChecked = (mealId, isChecked) => {
     const meal = meals.value.find((meal) => meal.id === mealId)
     if (meal) {
@@ -80,10 +106,19 @@ export const useMealStore = defineStore('meal', () => {
     }
   }
 
+  /**
+   * 添加餐品
+   * @param {Object} meal - 餐品信息
+   */
   const addMeal = async (meal) => {
     try {
       const response = await mealApi.addMeal(meal)
-      meals.value.push(response)
+      meals.value.push({
+        ...response,
+        id: response.meal_id || response.id,
+        imageUrl: response.image_url || response.imageUrl,
+        checked: false,
+      })
       ElMessage.success('添加餐食成功')
     } catch (error) {
       console.error('添加餐食失败:', error)
@@ -91,6 +126,10 @@ export const useMealStore = defineStore('meal', () => {
     }
   }
 
+  /**
+   * 删除餐品
+   * @param {string|number} mealId - 餐品 ID
+   */
   const removeMeal = async (mealId) => {
     try {
       await mealApi.deleteMeal(mealId)
@@ -102,12 +141,22 @@ export const useMealStore = defineStore('meal', () => {
     }
   }
 
+  /**
+   * 更新餐品
+   * @param {string|number} mealId - 餐品 ID
+   * @param {Object} meal - 餐品信息
+   */
   const updateMeal = async (mealId, meal) => {
     try {
       const response = await mealApi.updateMeal(mealId, meal)
       const index = meals.value.findIndex((meal) => meal.id === mealId)
       if (index !== -1) {
-        meals.value[index] = response
+        meals.value[index] = {
+          ...response,
+          id: response.meal_id || response.id,
+          imageUrl: response.image_url || response.imageUrl,
+          checked: meals.value[index].checked,
+        }
       }
       ElMessage.success('更新餐食成功')
     } catch (error) {
