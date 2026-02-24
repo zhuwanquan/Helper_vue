@@ -23,6 +23,11 @@ const menuItems = [
     title: '营养视图',
     icon: 'Document',
   },
+  {
+    path: '/nutritionAnalysis',
+    title: '营养分析',
+    icon: 'ChatDotRound',
+  },
 ]
 
 const handleMenuSelect = (index) => {
