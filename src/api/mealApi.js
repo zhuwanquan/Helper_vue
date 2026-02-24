@@ -1,9 +1,6 @@
 import axios from 'axios'
+import { ErrorHandler } from '@/utils/errorHandler'
 
-/**
- * 创建 API 客户端
- * @returns {Object} API 实例
- */
 const createApiClient = () => {
   /**
    * Axios 实例
@@ -29,9 +26,6 @@ const createApiClient = () => {
     }
   )
 
-  /**
-   * 响应拦截器
-   */
   api.interceptors.response.use(
     (response) => {
       if (response.data.code === 200) {
@@ -40,36 +34,8 @@ const createApiClient = () => {
       return Promise.reject(new Error(response.data.message || '请求失败'))
     },
     (error) => {
-      if (error.response) {
-        const { status, data } = error.response
-
-        switch (status) {
-          case 401:
-            console.error('未授权，请重新登录')
-            localStorage.removeItem('token')
-            window.location.href = '/login'
-            break
-          case 403:
-            console.error('拒绝访问')
-            break
-          case 404:
-            console.error('请求的资源不存在')
-            break
-          case 500:
-            console.error('服务器错误')
-            break
-          default:
-            console.error(data?.message || '请求失败')
-        }
-
-        return Promise.reject(new Error(data?.message || '请求失败'))
-      } else if (error.request) {
-        console.error('网络错误，请检查网络连接')
-        return Promise.reject(new Error('网络错误，请检查网络连接'))
-      } else {
-        console.error('请求配置错误:', error.message)
-        return Promise.reject(error)
-      }
+      ErrorHandler.handleApiError(error)
+      return Promise.reject(error)
     }
   )
 
