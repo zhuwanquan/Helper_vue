@@ -1,14 +1,54 @@
 <script setup>
 import { ref } from 'vue'
-import { aiApi } from '@/api/mealApi'
+import { aiApi } from '@/api/aiApi'
+import { useMealStore } from '@/stores/mealStore'
+import { calculateTotalNutrition } from '@/utils/mealUtils'
+
+const mealStore = useMealStore()
 
 const userInput = ref('')
 const chatMessages = ref([])
 const isLoading = ref(false)
 const eventSource = ref(null)
 const chatContainer = ref(null)
+const todayNutrition = ref(null)
 
 const systemPrompt = ref('你是一位专业的营养分析专家。请根据用户提供的食物信息，分析其营养成分、热量、以及健康建议。请用简洁、专业的语言回答。')
+
+const loadTodayNutrition = () => {
+  const selectedMeals = mealStore.selectedMeals
+  if (selectedMeals.length === 0) {
+    chatMessages.value.push({
+      role: 'assistant',
+      content: '今日暂无选中的餐品数据，请先在餐品记录中选择今日摄入的餐品。',
+    })
+    scrollToBottom()
+    return
+  }
+
+  const totalNutrition = calculateTotalNutrition(selectedMeals)
+  todayNutrition.value = totalNutrition
+
+  const nutritionText = `今日营养摄入数据：
+- 能量：${totalNutrition.energy} kcal
+- 蛋白质：${totalNutrition.protein} g
+- 反式脂肪酸：${totalNutrition.trans_fat} g
+- 饱和脂肪：${totalNutrition.saturated_fat} g
+- 碳水化合物：${totalNutrition.carbohydrate} g
+- 添加糖：${totalNutrition.added_sugar} g
+- 食盐：${totalNutrition.salt} g
+- 膳食纤维：${totalNutrition.dietary_fiber} g
+
+共选择了 ${selectedMeals.length} 个餐品。`
+
+  chatMessages.value.push({
+    role: 'assistant',
+    content: nutritionText,
+  })
+  scrollToBottom()
+
+  userInput.value = `我今日摄入了能量${totalNutrition.energy}kcal，蛋白质${totalNutrition.protein}g，碳水化合物${totalNutrition.carbohydrate}g，脂肪${totalNutrition.saturated_fat}g，请帮我分析今日营养摄入是否均衡，并给出改善建议。`
+}
 
 const sendMessage = () => {
   if (!userInput.value.trim() || isLoading.value) {
@@ -82,7 +122,12 @@ const scrollToBottom = () => {
   <div class="nutrition-analysis">
     <div class="nutrition-analysis__header">
       <h2 class="nutrition-analysis__title">营养分析</h2>
-      <el-button type="danger" plain @click="clearChat" :disabled="isLoading">清空对话</el-button>
+      <div class="nutrition-analysis__header-actions">
+        <el-button type="success" plain @click="loadTodayNutrition" :disabled="isLoading">
+          今日营养摄入
+        </el-button>
+        <el-button type="danger" plain @click="clearChat" :disabled="isLoading">清空对话</el-button>
+      </div>
     </div>
 
     <div class="nutrition-analysis__chat-container" ref="chatContainer">
@@ -182,6 +227,11 @@ export default {
   font-size: 24px;
   font-weight: 600;
   color: #303133;
+}
+
+.nutrition-analysis__header-actions {
+  display: flex;
+  gap: 12px;
 }
 
 .nutrition-analysis__chat-container {
