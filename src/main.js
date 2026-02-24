@@ -6,29 +6,37 @@ import 'element-plus/dist/index.css'
 import App from './App.vue'
 import router from './router'
 import { ErrorHandler } from './utils/errorHandler'
+import { useLogStore } from './stores/logStore'
+import testLogger from './utils/logger.test'
 
 const app = createApp(App)
+const pinia = createPinia()
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 app.use(ElementPlus)
 
-app.config.errorHandler = (err, instance, info) => {
-  console.error('Vue 应用错误:', err)
-  console.error('错误实例:', instance)
-  console.error('错误信息:', info)
-  ErrorHandler.reportError(err, { instance, info })
+// 初始化日志存储
+const logStore = useLogStore()
+logStore.loadConfig()
+logStore.initialize()
+
+// 配置错误处理
+app.config.errorHandler = ErrorHandler.handleVueError
+
+window.addEventListener('unhandledrejection', ErrorHandler.handleUnhandledRejection)
+
+window.addEventListener('error', ErrorHandler.handleGlobalError)
+
+// 测试日志系统
+if (!import.meta.env.PROD) {
+  testLogger()
 }
 
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('未处理的 Promise 拒绝:', event.reason)
-  ErrorHandler.reportError(event.reason, { type: 'unhandledrejection' })
-  event.preventDefault()
-})
-
-window.addEventListener('error', (event) => {
-  console.error('全局错误:', event.error)
-  ErrorHandler.reportError(event.error, { type: 'global-error' })
+// 记录应用启动
+logStore.info('应用启动', {
+  version: '1.0.0',
+  env: import.meta.env.MODE
 })
 
 app.mount('#app')

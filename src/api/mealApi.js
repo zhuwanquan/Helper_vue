@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ErrorHandler } from '@/utils/errorHandler'
+import { useLogStore } from '@/stores/logStore'
 
 const createApiClient = () => {
   /**
@@ -19,21 +20,67 @@ const createApiClient = () => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }
+
+      // 记录请求开始
+      config._startTime = Date.now()
+      const logStore = useLogStore()
+      logStore.debug(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+        method: config.method,
+        url: config.url,
+        params: config.params,
+        data: config.data
+      })
+
       return config
     },
     (error) => {
+      const logStore = useLogStore()
+      logStore.error('API Request Error', {
+        error: error.message
+      })
       return Promise.reject(error)
     }
   )
 
   api.interceptors.response.use(
     (response) => {
+      // 计算请求耗时
+      const duration = Date.now() - (response.config._startTime || Date.now())
+      const logStore = useLogStore()
+
+      logStore.debug(`API Response: ${response.config.method?.toUpperCase()} ${response.config.url} (${duration}ms)`, {
+        method: response.config.method,
+        url: response.config.url,
+        status: response.status,
+        duration,
+        data: response.data
+      })
+
       if (response.data.code === 200) {
         return response.data
       }
-      return Promise.reject(new Error(response.data.message || '请求失败'))
+
+      const error = new Error(response.data.message || '请求失败')
+      logStore.warn(`API Response Error: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+        status: response.status,
+        data: response.data
+      })
+
+      return Promise.reject(error)
     },
     (error) => {
+      // 计算请求耗时
+      const duration = Date.now() - (error.config._startTime || Date.now())
+      const logStore = useLogStore()
+
+      logStore.error(`API Response Error: ${error.config?.method?.toUpperCase()} ${error.config?.url} (${duration}ms)`, {
+        method: error.config?.method,
+        url: error.config?.url,
+        status: error.response?.status,
+        duration,
+        error: error.message
+      })
+
       ErrorHandler.handleApiError(error)
       return Promise.reject(error)
     }
